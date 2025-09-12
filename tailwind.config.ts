@@ -47,6 +47,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Da Nang Tourism Colors
+        ocean: "hsl(var(--ocean-blue))",
+        sunset: "hsl(var(--sunset-orange))",
+        tropical: "hsl(var(--tropical-green))",
+        sky: "hsl(var(--sky-blue))",
+        sand: "hsl(var(--warm-sand))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
