@@ -3,15 +3,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, MapPin, Clock, Camera } from 'lucide-react';
 import goldenBridge from '@/assets/golden-bridge.jpg';
-
+import bienmykhue from '@/assets/bien-my-khue.jpg';
+import chualinhung from '@/assets/chua-linh-ung.jpg';
+import { Navigate, useNavigate } from 'react-router-dom';
 const FeaturedDestinations = () => {
   const destinations = [
     {
       id: 1,
       name: 'Cầu Vàng - Ba Na Hills',
       image: goldenBridge,
-      rating: 4.8,
-      reviews: 2847,
+      rating: 5.0,
+      reviews: 5678,
       category: 'Thắng cảnh',
       duration: 'Cả ngày',
       description: 'Cây cầu vàng nổi tiếng với đôi bàn tay khổng lồ đỡ lấy, kiến trúc độc đáo giữa núi rừng Ba Na.',
@@ -20,7 +22,7 @@ const FeaturedDestinations = () => {
     {
       id: 2,
       name: 'Bãi biển Mỹ Khê',
-      image: '/placeholder.svg',
+      image: bienmykhue,
       rating: 4.7,
       reviews: 3452,
       category: 'Bãi biển',
@@ -31,7 +33,7 @@ const FeaturedDestinations = () => {
     {
       id: 3,
       name: 'Chùa Linh Ứng',
-      image: '/placeholder.svg',
+      image: chualinhung,
       rating: 4.6,
       reviews: 1876,
       category: 'Tâm linh',
@@ -40,6 +42,7 @@ const FeaturedDestinations = () => {
       highlights: ['Tượng Quan Âm 67m', 'View toàn cảnh', 'Kiến trúc đẹp'],
     },
   ];
+  const navigate = useNavigate();
 
   return (
     <section className="py-20 bg-gradient-to-b from-background to-muted/20">
@@ -110,9 +113,12 @@ const FeaturedDestinations = () => {
                   ))}
                 </div>
                 
-                <Button className="w-full hero-gradient hover:opacity-90 text-white">
+               <Button
+                  className="w-full hero-gradient hover:opacity-90 text-white"
+                  onClick={() => navigate(`/destinations/${destination.id}`)}
+                >
                   Xem chi tiết
-                </Button>
+              </Button>
               </CardContent>
             </Card>
           ))}

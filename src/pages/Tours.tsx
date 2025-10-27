@@ -1,126 +1,123 @@
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Star, Users, Calendar, Clock, Search, Filter, MapPin } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Star, Users, Calendar, Clock, Search, Filter, MapPin
+} from 'lucide-react';
+
+// === API CALL (KHÔNG CẦN TOKEN) ===
+const API_BASE = "http://localhost:5000/api/tours";
+
+const callAPI = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Không thể tải tour");
+  return res.json();
+};
+
+interface Tour {
+  _id: string;
+  title: string;
+  image: string;
+  price: number;
+  originalPrice?: number;
+  duration: string;
+  groupSize?: string;
+  rating?: number;
+  reviews?: number;
+  highlights: string[];
+  departure?: string;
+  category?: string;
+  includes: string[];
+  status: string;
+}
 
 const Tours = () => {
-  const tours = [
-    {
-      id: 1,
-      title: 'Tour Ba Na Hills + Chùa Linh Ứng',
-      image: '/placeholder.svg',
-      price: 750000,
-      originalPrice: 950000,
-      duration: '1 ngày',
-      groupSize: '15-20 người',
-      rating: 4.8,
-      reviews: 156,
-      highlights: ['Cầu Vàng', 'Làng Pháp', 'Chùa Linh Ứng', 'Cáp treo'],
-      departure: 'Hàng ngày',
-      category: 'Khám phá thiên nhiên',
-      includes: ['Xe du lịch', 'Hướng dẫn viên', 'Vé tham quan', 'Bữa trưa'],
-    },
-    {
-      id: 2,
-      title: 'City Tour Đà Nẵng + Hội An',
-      image: '/placeholder.svg',
-      price: 650000,
-      originalPrice: 800000,
-      duration: '1 ngày',
-      groupSize: '10-15 người',
-      rating: 4.7,
-      reviews: 203,
-      highlights: ['Phố cổ Hội An', 'Chùa Cầu', 'Làng gốm Thanh Hà', 'Đèn lồng'],
-      departure: 'Thứ 2, 4, 6',
-      category: 'Văn hóa lịch sử',
-      includes: ['Xe du lịch', 'Hướng dẫn viên', 'Vé tham quan', '2 bữa ăn'],
-    },
-    {
-      id: 3,
-      title: 'Tour Ẩm thực Đà Nẵng',
-      image: '/placeholder.svg',
-      price: 450000,
-      originalPrice: 550000,
-      duration: '4 giờ',
-      groupSize: '8-12 người',
-      rating: 4.9,
-      reviews: 89,
-      highlights: ['Bún chả cá', 'Mì Quảng', 'Bánh tráng cuốn thịt heo', 'Chè'],
-      departure: 'Chiều hàng ngày',
-      category: 'Ẩm thực',
-      includes: ['Hướng dẫn viên', 'Tất cả món ăn', 'Nước uống', 'Xe máy'],
-    },
-    {
-      id: 4,
-      title: 'Tour Ngũ Hành Sơn + Bãi biển Mỹ Khê',
-      image: '/placeholder.svg',
-      price: 580000,
-      originalPrice: 720000,
-      duration: '1 ngày',
-      groupSize: '12-18 người',
-      rating: 4.6,
-      reviews: 134,
-      highlights: ['Ngũ Hành Sơn', 'Làng đá Non Nước', 'Bãi biển Mỹ Khê', 'Chùa Tam Thai'],
-      departure: 'Thứ 3, 5, 7',
-      category: 'Khám phá thiên nhiên',
-      includes: ['Xe du lịch', 'Hướng dẫn viên', 'Vé tham quan', 'Bữa trưa'],
-    },
-    {
-      id: 5,
-      title: 'Tour Sơn Trà + Chùa Linh Ứng',
-      image: '/placeholder.svg',
-      price: 380000,
-      originalPrice: 480000,
-      duration: 'Nửa ngày',
-      groupSize: '10-15 người',
-      rating: 4.5,
-      reviews: 98,
-      highlights: ['Bán đảo Sơn Trà', 'Chùa Linh Ứng', 'Tượng Quan Âm', 'Rừng nguyên sinh'],
-      departure: 'Sáng hàng ngày',
-      category: 'Tâm linh',
-      includes: ['Xe du lịch', 'Hướng dẫn viên', 'Vé tham quan', 'Nước suối'],
-    },
-    {
-      id: 6,
-      title: 'Tour Sunset + Cầu Rồng phun lửa',
-      image: '/placeholder.svg',
-      price: 320000,
-      originalPrice: 400000,
-      duration: '3 giờ',
-      groupSize: '15-20 người',
-      rating: 4.7,
-      reviews: 167,
-      highlights: ['Cầu Rồng', 'Phun lửa', 'Sunset', 'Cầu Tình Yêu'],
-      departure: 'Chiều thứ 7, CN',
-      category: 'City tour',
-      includes: ['Xe du lịch', 'Hướng dẫn viên', 'Nước uống', 'Ảnh kỷ niệm'],
-    },
-  ];
+  const [tours, setTours] = useState<Tour[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [durationFilter, setDurationFilter] = useState("all");
+  const [priceFilter, setPriceFilter] = useState("all");
+
+  // 👉 Thêm state để hiển thị dần
+  const [visibleCount, setVisibleCount] = useState(6);
+
+  const navigate = useNavigate();
+
+  // Load tours từ backend
+  useEffect(() => {
+    const loadTours = async () => {
+      try {
+        const data = await callAPI(API_BASE);
+        // Chỉ hiển thị tour đã xuất bản
+        setTours(data.filter((t: Tour) => t.status === "published"));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadTours();
+  }, []);
+
+  // Filter logic
+  const filteredTours = useMemo(() => {
+    return tours.filter((tour) => {
+      const matchesSearch = (tour.title || "").toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = categoryFilter === "all" || (tour.category || "").toLowerCase() === categoryFilter.toLowerCase();
+      const matchesDuration = durationFilter === "all" ||
+        (durationFilter === "half" && tour.duration.toLowerCase().includes("giờ")) ||
+        (durationFilter === "full" && tour.duration.toLowerCase().includes("ngày") && !tour.duration.toLowerCase().includes("nhiều")) ||
+        (durationFilter === "multi" && tour.duration.toLowerCase().includes("nhiều"));
+      const matchesPrice = priceFilter === "all" ||
+        (priceFilter === "low" && tour.price < 500000) ||
+        (priceFilter === "medium" && tour.price >= 500000 && tour.price <= 1000000) ||
+        (priceFilter === "high" && tour.price > 1000000);
+
+      return matchesSearch && matchesCategory && matchesDuration && matchesPrice;
+    });
+  }, [tours, searchTerm, categoryFilter, durationFilter, priceFilter]);
+
+  // Chỉ hiển thị giới hạn theo visibleCount
+  const visibleTours = filteredTours.slice(0, visibleCount);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
   };
 
+  const getDiscountPercent = (price: number, originalPrice?: number) => {
+    if (!originalPrice || originalPrice <= price) return 0;
+    return Math.round((1 - price / originalPrice) * 100);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
+
       <main>
         {/* Hero Section */}
-        <section className="relative h-[50vh] flex items-center justify-center overflow-hidden">
+        <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-secondary/90 to-primary/90 z-10" />
           <div className="absolute inset-0">
-            <img
-              src="/placeholder.svg"
-              alt="Tour du lịch"
-              className="w-full h-full object-cover"
-            />
+            <div className="w-full h-full bg-gradient-to-br from-blue-600 to-teal-600" />
           </div>
-          <div className="relative z-20 text-center text-white">
-            <Badge className="mb-4 sunset-gradient text-white">Tour du lịch</Badge>
+          <div className="relative z-20 text-center text-white px-4">
+            <Badge className="mb-4 bg-white/20 text-white border-white/30">Tour du lịch</Badge>
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
               Tour được yêu thích
             </h1>
@@ -131,51 +128,59 @@ const Tours = () => {
         </section>
 
         {/* Search & Filter */}
-        <section className="py-12 bg-muted/20">
+        <section className="py-6 bg-muted/20">
           <div className="container mx-auto px-4">
-            <Card className="p-6">
+            <Card className="p-6 shadow-sm">
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Tìm kiếm tour..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
                   />
                 </div>
-                <Select>
+
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="Loại tour" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tất cả</SelectItem>
-                    <SelectItem value="nature">Khám phá thiên nhiên</SelectItem>
-                    <SelectItem value="culture">Văn hóa lịch sử</SelectItem>
-                    <SelectItem value="food">Ẩm thực</SelectItem>
-                    <SelectItem value="spiritual">Tâm linh</SelectItem>
-                    <SelectItem value="city">City tour</SelectItem>
+                    <SelectItem value="khám phá thiên nhiên">Khám phá thiên nhiên</SelectItem>
+                    <SelectItem value="văn hóa lịch sử">Văn hóa lịch sử</SelectItem>
+                    <SelectItem value="ẩm thực">Ẩm thực</SelectItem>
+                    <SelectItem value="tâm linh">Tâm linh</SelectItem>
+                    <SelectItem value="city tour">City tour</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select>
+
+                <Select value={durationFilter} onValueChange={setDurationFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="Thời gian" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all">Tất cả</SelectItem>
                     <SelectItem value="half">Nửa ngày</SelectItem>
                     <SelectItem value="full">1 ngày</SelectItem>
                     <SelectItem value="multi">Nhiều ngày</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select>
+
+                <Select value={priceFilter} onValueChange={setPriceFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="Giá" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all">Tất cả</SelectItem>
                     <SelectItem value="low">Dưới 500k</SelectItem>
                     <SelectItem value="medium">500k - 1tr</SelectItem>
                     <SelectItem value="high">Trên 1tr</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button className="sunset-gradient text-white">
+
+                <Button className="bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:from-orange-600 hover:to-pink-600">
                   <Filter className="h-4 w-4 mr-2" />
                   Tìm kiếm
                 </Button>
@@ -185,119 +190,168 @@ const Tours = () => {
         </section>
 
         {/* Tours Grid */}
-        <section className="py-20">
+        <section className="py-6">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {tours.map((tour) => (
-                <Card key={tour.id} className="group card-hover border-0 shadow-lg overflow-hidden">
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={tour.image}
-                      alt={tour.title}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <Badge className="tropical-gradient text-white text-xs">
-                        {tour.category}
-                      </Badge>
-                    </div>
-                    <div className="absolute top-4 right-4 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
-                      -{Math.round((1 - tour.price / tour.originalPrice) * 100)}%
-                    </div>
-                  </div>
-                  
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-bold mb-2 line-clamp-2">{tour.title}</h3>
-                    
-                    <div className="flex items-center space-x-4 mb-3 text-sm text-muted-foreground">
-                      <div className="flex items-center space-x-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{tour.duration}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Users className="h-4 w-4" />
-                        <span>{tour.groupSize}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-semibold text-sm">{tour.rating}</span>
-                        <span className="text-muted-foreground text-sm">({tour.reviews} đánh giá)</span>
-                      </div>
-                      <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
-                        <span>{tour.departure}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {tour.highlights.slice(0, 3).map((highlight, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {highlight}
-                        </Badge>
-                      ))}
-                      {tour.highlights.length > 3 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{tour.highlights.length - 3} khác
-                        </Badge>
+            {loading ? (
+              <div className="text-center py-20">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <p className="mt-4 text-muted-foreground">Đang tải tour...</p>
+              </div>
+            ) : visibleTours.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-xl text-muted-foreground">Không tìm thấy tour nào phù hợp.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {visibleTours.map((tour) => (
+                  <Card
+                    key={tour._id}
+                    className="group card-hover border-0 shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300"
+                  >
+                    <div className="relative overflow-hidden">
+                      {tour.image ? (
+                        <img
+                          src={tour.image ? (tour.image.startsWith('http') ? tour.image : `http://localhost:5000${tour.image}`) : ""}
+                          alt={tour.title}
+                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="h-48 bg-gradient-to-br from-blue-400 to-teal-500 flex items-center justify-center">
+                          <MapPin className="h-16 w-16 text-white opacity-70" />
+                        </div>
+                      )}
+                      {tour.category && (
+                        <div className="absolute top-4 left-4">
+                          <Badge className="bg-gradient-to-r from-teal-500 to-blue-600 text-white text-xs">
+                            {tour.category}
+                          </Badge>
+                        </div>
+                      )}
+                      {tour.originalPrice && tour.originalPrice > tour.price && (
+                        <div className="absolute top-4 right-4 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
+                          -{getDiscountPercent(tour.price, tour.originalPrice)}%
+                        </div>
                       )}
                     </div>
 
-                    <div className="mb-4">
-                      <p className="text-sm text-muted-foreground mb-2">Bao gồm:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {tour.includes.slice(0, 2).map((item, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {item}
-                          </Badge>
-                        ))}
-                        {tour.includes.length > 2 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{tour.includes.length - 2} khác
-                          </Badge>
+                    <CardContent className="p-6 space-y-3">
+                      <h3 className="text-xl font-bold mb-2 line-clamp-2 text-gray-900">
+                        {tour.title}
+                      </h3>
+
+                      <div className="flex items-center space-x-4 mb-3 text-sm text-muted-foreground">
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-4 w-4" />
+                          <span>{tour.duration}</span>
+                        </div>
+                        {tour.groupSize && (
+                          <div className="flex items-center space-x-1">
+                            <Users className="h-4 w-4" />
+                            <span>{tour.groupSize}</span>
+                          </div>
                         )}
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-baseline space-x-2">
-                        <span className="text-2xl font-bold text-secondary">
-                          {formatPrice(tour.price)}
-                        </span>
-                        <span className="text-sm text-muted-foreground line-through">
-                          {formatPrice(tour.originalPrice)}
-                        </span>
+
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-1">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-semibold text-sm">{tour.rating || 0}</span>
+                          <span className="text-muted-foreground text-sm">
+                            ({tour.reviews || 0} đánh giá)
+                          </span>
+                        </div>
+                        {tour.departure && (
+                          <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                            <Calendar className="h-4 w-4" />
+                            <span>{tour.departure}</span>
+                          </div>
+                        )}
                       </div>
-                      <span className="text-sm text-muted-foreground">/người</span>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Button className="w-full sunset-gradient hover:opacity-90 text-white">
+
+                      {/* Highlights */}
+                      {tour.highlights && tour.highlights.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-4">
+                          {tour.highlights.slice(0, 3).map((h, i) => (
+                            <Badge key={i} variant="secondary" className="text-xs">
+                              {h}
+                            </Badge>
+                          ))}
+                          {tour.highlights.length > 3 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{tour.highlights.length - 3} khác
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Includes */}
+                      {tour.includes && tour.includes.length > 0 && (
+                        <div className="mb-4">
+                          <p className="text-sm text-muted-foreground mb-2">Bao gồm:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {tour.includes.slice(0, 2).map((item, i) => (
+                              <Badge key={i} variant="outline" className="text-xs">
+                                {item}
+                              </Badge>
+                            ))}
+                            {tour.includes.length > 2 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{tour.includes.length - 2} khác
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Price */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-baseline space-x-2">
+                          <span className="text-2xl font-bold text-secondary">
+                            {formatPrice(tour.price)}
+                          </span>
+                          {tour.originalPrice && tour.originalPrice > tour.price && (
+                            <span className="text-sm text-muted-foreground line-through">
+                              {formatPrice(tour.originalPrice)}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-sm text-muted-foreground">/người</span>
+                      </div>
+
+                      {/* Book Button */}
+                      <Button
+                        className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-medium"
+                        onClick={() => navigate(`/book-tour/${tour._id}`)}
+                      >
                         Đặt tour ngay
                       </Button>
-                      <Button variant="outline" className="w-full">
-                        Xem chi tiết
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
 
             {/* Load More */}
-            <div className="text-center mt-12">
-              <Button variant="outline" size="lg" className="border-secondary text-secondary hover:bg-secondary hover:text-white">
-                Xem thêm tour
-              </Button>
-            </div>
+            {!loading && filteredTours.length > visibleCount && (
+              <div className="text-center mt-12">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-secondary text-secondary hover:bg-secondary hover:text-white"
+                  onClick={() => setVisibleCount((prev) => prev + 6)}
+                >
+                  Xem thêm tour
+                </Button>
+              </div>
+            )}
           </div>
         </section>
       </main>
+
       <Footer />
     </div>
   );
 };
 
 export default Tours;
+

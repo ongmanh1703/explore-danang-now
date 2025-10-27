@@ -1,3 +1,4 @@
+// src/pages/Explore.tsx
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,106 +7,94 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Star, MapPin, Clock, Search, Filter } from 'lucide-react';
-import goldenBridge from '@/assets/golden-bridge.jpg';
+import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { toast } from '@/components/ui/use-toast';
+
+const API_URL = "/api/posts";
+const BACKEND_URL = "http://localhost:5000";
 
 const Explore = () => {
-  const categories = [
-    { value: 'all', label: 'Tất cả' },
-    { value: 'beach', label: 'Bãi biển' },
-    { value: 'mountain', label: 'Núi rừng' },
-    { value: 'spiritual', label: 'Tâm linh' },
-    { value: 'entertainment', label: 'Vui chơi' },
-    { value: 'culture', label: 'Văn hóa' },
-  ];
+  const [destinations, setDestinations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterDuration, setFilterDuration] = useState("all");
 
-  const destinations = [
-    {
-      id: 1,
-      name: 'Cầu Vàng - Ba Na Hills',
-      image: goldenBridge,
-      rating: 4.8,
-      reviews: 2847,
-      category: 'Thắng cảnh',
-      duration: 'Cả ngày',
-      location: 'Ba Na Hills',
-      description: 'Cây cầu vàng nổi tiếng với đôi bàn tay khổng lồ đỡ lấy, kiến trúc độc đáo giữa núi rừng Ba Na.',
-      highlights: ['Cáp treo dài nhất thế giới', 'Kiến trúc Pháp cổ', 'Làng Pháp'],
-    },
-    {
-      id: 2,
-      name: 'Bãi biển Mỹ Khê',
-      image: '/placeholder.svg',
-      rating: 4.7,
-      reviews: 3452,
-      category: 'Bãi biển',
-      duration: '2-3 giờ',
-      location: 'Ngũ Hành Sơn',
-      description: 'Một trong những bãi biển đẹp nhất Việt Nam với cát trắng mịn và nước biển trong xanh.',
-      highlights: ['Cát trắng mịn', 'Nước biển trong', 'Hoạt động thể thao'],
-    },
-    {
-      id: 3,
-      name: 'Chùa Linh Ứng',
-      image: '/placeholder.svg',
-      rating: 4.6,
-      reviews: 1876,
-      category: 'Tâm linh',
-      duration: '1-2 giờ',
-      location: 'Bán đảo Sơn Trà',
-      description: 'Ngôi chùa linh thiêng với tượng Phật Quan Âm cao nhất Việt Nam, nhìn ra toàn cảnh thành phố.',
-      highlights: ['Tượng Quan Âm 67m', 'View toàn cảnh', 'Kiến trúc đẹp'],
-    },
-    {
-      id: 4,
-      name: 'Ngũ Hành Sơn',
-      image: '/placeholder.svg',
-      rating: 4.5,
-      reviews: 2156,
-      category: 'Tâm linh',
-      duration: '3-4 giờ',
-      location: 'Ngũ Hành Sơn',
-      description: 'Quần thể 5 ngọn núi đá vôi với hang động và chùa chiền linh thiêng.',
-      highlights: ['5 ngọn núi', 'Hang động tự nhiên', 'Chùa cổ'],
-    },
-    {
-      id: 5,
-      name: 'Cầu Rồng',
-      image: '/placeholder.svg',
-      rating: 4.4,
-      reviews: 1543,
-      category: 'Văn hóa',
-      duration: '30 phút',
-      location: 'Trung tâm thành phố',
-      description: 'Cây cầu biểu tượng của Đà Nẵng với hình dáng con rồng phun lửa và nước.',
-      highlights: ['Phun lửa cuối tuần', 'Kiến trúc độc đáo', 'Biểu tượng thành phố'],
-    },
-    {
-      id: 6,
-      name: 'Bán đảo Sơn Trà',
-      image: '/placeholder.svg',
-      rating: 4.6,
-      reviews: 987,
-      category: 'Thiên nhiên',
-      duration: 'Nửa ngày',
-      location: 'Sơn Trà',
-      description: 'Khu bảo tồn thiên nhiên với rừng nguyên sinh và bãi biển hoang sơ.',
-      highlights: ['Rừng nguyên sinh', 'Voọc chà vá chân nâu', 'Bãi biển hoang sơ'],
-    },
-  ];
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchDestinations();
+  }, []);
+
+  const fetchDestinations = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_URL}?category=kham_pha&status=published`);
+      if (res.ok) {
+        const data = await res.json();
+        setDestinations(data);
+      }
+    } catch (err) {
+      toast({ title: "Lỗi", description: "Không thể tải điểm đến", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDuration = (duration: string) => {
+    if (!duration) return "Liên hệ";
+    return duration;
+  };
+
+  const getCategoryLabel = (cat: string) => {
+    const map: any = {
+      'beach': 'Bãi biển',
+      'mountain': 'Núi rừng',
+      'spiritual': 'Tâm linh',
+      'entertainment': 'Vui chơi',
+      'culture': 'Văn hóa'
+    };
+    return map[cat] || cat;
+  };
+
+  const filtered = destinations.filter(d => {
+    const matchesSearch = d.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = filterCategory === "all" || d.category === filterCategory;
+    const matchesDuration = filterDuration === "all" ||
+      (filterDuration === "short" && d.duration?.includes("giờ")) ||
+      (filterDuration === "medium" && d.duration?.includes("giờ")) ||
+      (filterDuration === "long" && d.duration?.includes("ngày")) ||
+      (filterDuration === "full" && d.duration?.includes("ngày"));
+
+    return matchesSearch && matchesCategory && matchesDuration;
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main>
         {/* Hero Section */}
-        <section className="relative h-[50vh] flex items-center justify-center overflow-hidden">
+        <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-secondary/90 z-10" />
           <div className="absolute inset-0">
-            <img
-              src={goldenBridge}
-              alt="Khám phá Đà Nẵng"
-              className="w-full h-full object-cover"
-            />
+            {destinations[0]?.images?.[0] ? (
+              <img
+                src={destinations[0].images[0].startsWith('http') ? destinations[0].images[0] : `${BACKEND_URL}${destinations[0].images[0]}`}
+                alt="Khám phá Đà Nẵng"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="bg-gradient-to-br from-blue-500 to-teal-600 w-full h-full" />
+            )}
           </div>
           <div className="relative z-20 text-center text-white">
             <Badge className="mb-4 hero-gradient text-white">Khám phá</Badge>
@@ -119,7 +108,7 @@ const Explore = () => {
         </section>
 
         {/* Search & Filter */}
-        <section className="py-12 bg-muted/20">
+        <section className="py-6 bg-muted/20">
           <div className="container mx-auto px-4">
             <Card className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -128,25 +117,29 @@ const Explore = () => {
                   <Input
                     placeholder="Tìm kiếm điểm đến..."
                     className="pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <Select>
+                <Select value={filterCategory} onValueChange={setFilterCategory}>
                   <SelectTrigger>
                     <SelectValue placeholder="Loại điểm đến" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.value} value={category.value}>
-                        {category.label}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="all">Tất cả</SelectItem>
+                    <SelectItem value="beach">Bãi biển</SelectItem>
+                    <SelectItem value="mountain">Núi rừng</SelectItem>
+                    <SelectItem value="spiritual">Tâm linh</SelectItem>
+                    <SelectItem value="entertainment">Vui chơi</SelectItem>
+                    <SelectItem value="culture">Văn hóa</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select>
+                <Select value={filterDuration} onValueChange={setFilterDuration}>
                   <SelectTrigger>
                     <SelectValue placeholder="Thời gian tham quan" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all">Tất cả</SelectItem>
                     <SelectItem value="short">Dưới 2 giờ</SelectItem>
                     <SelectItem value="medium">2-4 giờ</SelectItem>
                     <SelectItem value="long">Nửa ngày</SelectItem>
@@ -163,72 +156,68 @@ const Explore = () => {
         </section>
 
         {/* Destinations Grid */}
-        <section className="py-20">
+        <section className="py-6">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {destinations.map((destination) => (
-                <Card key={destination.id} className="group card-hover border-0 shadow-lg overflow-hidden">
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={destination.image}
-                      alt={destination.name}
-                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <Badge className="tropical-gradient text-white">
-                        {destination.category}
-                      </Badge>
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </div>
-                  
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-xl font-bold">{destination.name}</h3>
-                      <div className="flex items-center space-x-1 text-sm">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-semibold">{destination.rating}</span>
-                        <span className="text-muted-foreground">({destination.reviews})</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-4 mb-3 text-sm text-muted-foreground">
-                      <div className="flex items-center space-x-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{destination.duration}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <MapPin className="h-4 w-4" />
-                        <span>{destination.location}</span>
-                      </div>
-                    </div>
-                    
-                    <p className="text-muted-foreground mb-4 line-clamp-2">
-                      {destination.description}
-                    </p>
-                    
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {destination.highlights.map((highlight, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {highlight}
+            {filtered.length === 0 ? (
+              <p className="text-center text-muted-foreground py-12">Không tìm thấy điểm đến nào</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filtered.map((dest) => (
+                  <Card key={dest._id} className="group card-hover border-0 shadow-lg overflow-hidden">
+                    <div className="relative overflow-hidden">
+                      {dest.images?.[0] ? (
+                        <img
+                          src={dest.images[0].startsWith('http') ? dest.images[0] : `${BACKEND_URL}${dest.images[0]}`}
+                          alt={dest.title}
+                          className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="bg-muted w-full h-64 flex items-center justify-center">
+                          <MapPin className="h-12 w-12 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="absolute top-4 left-4">
+                        <Badge className="tropical-gradient text-white">
+                          {getCategoryLabel(dest.category) || "Khám phá"}
                         </Badge>
-                      ))}
+                      </div>
                     </div>
-                    
-                    <Button className="w-full hero-gradient hover:opacity-90 text-white">
-                      Xem chi tiết
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
 
-            {/* Load More */}
-            <div className="text-center mt-12">
-              <Button variant="outline" size="lg" className="border-primary text-primary hover:bg-primary hover:text-white">
-                Xem thêm điểm đến
-              </Button>
-            </div>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-xl font-bold">{dest.title}</h3>
+                        <div className="flex items-center space-x-1 text-sm">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-semibold">4.8</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-4 mb-3 text-sm text-muted-foreground">
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-4 w-4" />
+                          <span>{formatDuration(dest.duration) || "Liên hệ"}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <MapPin className="h-4 w-4" />
+                          <span>{dest.place || "Đà Nẵng"}</span>
+                        </div>
+                      </div>
+
+                      <p className="text-muted-foreground mb-4 line-clamp-2">
+                        {dest.content?.slice(0, 120)}...
+                      </p>
+
+                     <Button
+  className="w-full hero-gradient hover:opacity-90 text-white"
+  onClick={() => navigate(`/destinations/${dest._id}`)}  // Dùng _id từ API
+>
+  Xem chi tiết
+</Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </main>

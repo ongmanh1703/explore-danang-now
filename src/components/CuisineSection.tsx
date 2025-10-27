@@ -2,44 +2,46 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, MapPin, DollarSign, Clock } from 'lucide-react';
-import vietnameseFood from '@/assets/vietnamese-food.jpg';
+import Myquang from '@/assets/my-quang.jpg';
+import Caolau from '@/assets/vietnamese-food.jpg';
+import Banhtrang from '@/assets/banh-trang.jpg';
 
 const CuisineSection = () => {
   const dishes = [
     {
       id: 1,
       name: 'Mì Quảng Đà Nẵng',
-      image: vietnameseFood,
+      image: Myquang,
       rating: 4.9,
       reviews: 156,
       price: '35.000đ - 50.000đ',
       category: 'Đặc sản',
       description: 'Món mì truyền thống với nước dùng đậm đà, thịt tôm và rau thơm',
-      restaurants: ['Mì Quảng Bà Mua', 'Mì Quảng 1A', 'Mì Quảng Bờ Sông Hàn'],
-      cookingTime: '15-20 phút',
+      restaurants: ['Mì Quảng Bà Mua'],
+      cookingTime: '10-15 phút',
     },
     {
       id: 2,
-      name: 'Bún Chả Cá Đà Nẵng',
-      image: '/placeholder.svg',
+      name: 'Cao lầu',
+      image: Caolau,
       rating: 4.8,
       reviews: 203,
       price: '30.000đ - 45.000đ',
       category: 'Đặc sản',
-      description: 'Bún tươi với chả cá thơm ngon, rau sống và nước chấm chua ngọt',
-      restaurants: ['Bún Chả Cá Bà Diệp', 'Bún Chả Cá Phố Cũ', 'Bún Chả Cá 99'],
+      description: 'Cao lầu là đặc sản Hội An với sợi mì vàng dai, thịt heo xíu thơm mềm. Món ăn không chan nhiều nước, chỉ rưới chút sốt đậm đà, tạo nên hương vị độc đáo khó quên.',
+      restaurants: ['Cao lầu Phố Hội', 'Mì cao lầu-Ba Tàu'],
       cookingTime: '10-15 phút',
     },
     {
       id: 3,
       name: 'Bánh Tráng Cuốn Thịt Heo',
-      image: '/placeholder.svg',
+      image: Banhtrang,
       rating: 4.7,
       reviews: 89,
       price: '25.000đ - 35.000đ',
       category: 'Ăn vặt',
       description: 'Bánh tráng mỏng cuốn thịt heo nướng, chấm với nước mắm chua ngọt',
-      restaurants: ['Bánh Tráng Bà Phương', 'Bánh Tráng Nướng Cô Linh'],
+      restaurants: ['Bánh Tráng Cuốn Thịt Heo Đại Lộc'],
       cookingTime: '5-10 phút',
     },
   ];
@@ -50,6 +52,11 @@ const CuisineSection = () => {
     { name: 'Ẩm thực đường phố', count: 80, color: 'tropical-gradient' },
     { name: 'Café & Bar', count: 65, color: 'hero-gradient' },
   ];
+
+  const handleSearchRestaurant = (dishName) => {
+    const query = `${dishName} Đà Nẵng`;
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank');
+  };
 
   return (
     <section className="py-20 bg-gradient-to-b from-muted/10 to-background">
@@ -125,7 +132,10 @@ const CuisineSection = () => {
                   </div>
                 </div>
                 
-                <Button className="w-full sunset-gradient hover:opacity-90 text-white">
+                <Button 
+                  className="w-full sunset-gradient hover:opacity-90 text-white"
+                  onClick={() => handleSearchRestaurant(dish.name)}
+                >
                   Tìm nhà hàng
                 </Button>
               </CardContent>

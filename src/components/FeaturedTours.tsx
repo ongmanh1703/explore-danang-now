@@ -2,27 +2,30 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, Users, Calendar, DollarSign, Clock } from 'lucide-react';
-
+import Bana from '@/assets/ba-na.jpg';
+import Hoian from '@/assets/chua-cau-hoian.jpg';
+import Chodem from '@/assets/cho-dem-son-tra.jpg'
+import { Navigate } from 'react-router-dom';
 const FeaturedTours = () => {
   const tours = [
     {
       id: 1,
-      title: 'Tour Ba Na Hills + Chùa Linh Ứng',
-      image: '/placeholder.svg',
+      title: 'Tour Ba Na Hills',
+      image: Bana,
       price: 750000,
       originalPrice: 950000,
       duration: '1 ngày',
-      groupSize: '15-20 người',
+      groupSize: '3 người',
       rating: 4.8,
-      reviews: 156,
-      highlights: ['Cầu Vàng', 'Làng Pháp', 'Chùa Linh Ứng', 'Cáp treo'],
+      reviews: 3093,
+      highlights: ['Cầu Vàng', 'Làng Pháp', 'Cáp treo'],
       departure: 'Hàng ngày',
-      category: 'Khám phá thiên nhiên',
+      category: 'Thắng cảnh',
     },
     {
       id: 2,
       title: 'City Tour Đà Nẵng + Hội An',
-      image: '/placeholder.svg',
+      image: Hoian,
       price: 650000,
       originalPrice: 800000,
       duration: '1 ngày',
@@ -35,16 +38,16 @@ const FeaturedTours = () => {
     },
     {
       id: 3,
-      title: 'Tour Ẩm thực Đà Nẵng',
-      image: '/placeholder.svg',
+      title: 'Tour Ẩm thực Chợ Đêm Sơn Trà',
+      image: Chodem,
       price: 450000,
       originalPrice: 550000,
       duration: '4 giờ',
       groupSize: '8-12 người',
       rating: 4.9,
       reviews: 89,
-      highlights: ['Bún chả cá', 'Mì Quảng', 'Bánh tráng cuốn thịt heo', 'Chè'],
-      departure: 'Chiều hàng ngày',
+      highlights: ['Mực rim', 'Bún trộn', 'Chè'],
+      departure: 'Tối hàng ngày',
       category: 'Ẩm thực',
     },
   ];
@@ -52,6 +55,9 @@ const FeaturedTours = () => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
   };
+  const Navigate = (path: string) => {
+    window.location.href = path;
+  }
 
   return (
     <section className="py-20 bg-gradient-to-b from-muted/10 to-background">
@@ -137,9 +143,12 @@ const FeaturedTours = () => {
                   <span className="text-sm text-muted-foreground">/người</span>
                 </div>
                 
-                <Button className="w-full sunset-gradient hover:opacity-90 text-white">
-                  Đặt tour ngay
-                </Button>
+                 <Button
+                        className="w-full sunset-gradient hover:opacity-90 text-white"
+                        onClick={() => Navigate(`/book-tour/${tour.id}`)}
+                      >
+                        Đặt tour ngay
+                      </Button>
               </CardContent>
             </Card>
           ))}

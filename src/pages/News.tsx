@@ -1,3 +1,4 @@
+// frontend/src/pages/News.tsx
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,8 +7,31 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, User, Eye, Search, Filter, MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { toast } from '@/components/ui/use-toast';
+
+const BACKEND_URL = "http://localhost:5000"; // ĐỔI NẾU CẦN
+
+interface Post {
+  _id: string;
+  title: string;
+  content: string;
+  images: string[];
+  category: string;
+  status: 'draft' | 'published';
+  createdAt: string;
+  views?: number;
+  comments?: number;
+}
 
 const News = () => {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const navigate = useNavigate();
+
   const newsCategories = [
     { value: 'all', label: 'Tất cả' },
     { value: 'travel-news', label: 'Tin du lịch' },
@@ -17,99 +41,70 @@ const News = () => {
     { value: 'reviews', label: 'Review' },
   ];
 
-  const featuredNews = [
-    {
-      id: 1,
-      title: 'Đà Nẵng ra mắt tuyến đường bộ ven biển mới, thu hút hàng triệu du khách',
-      excerpt: 'Tuyến đường bộ ven biển mới dài 15km sẽ kết nối các điểm du lịch chính của thành phố...',
-      image: '/placeholder.svg',
-      category: 'Tin du lịch',
-      author: 'Nguyễn Văn A',
-      publishDate: '2024-01-15',
-      views: 1234,
-      comments: 45,
-      featured: true,
-    },
-    {
-      id: 2,
-      title: 'Lễ hội pháo hoa quốc tế Đà Nẵng 2024 - Quy mô lớn nhất từ trước đến nay',
-      excerpt: 'Lễ hội pháo hoa quốc tế Đà Nẵng 2024 sẽ diễn ra từ 10-15/6 với sự tham gia của 8 đội pháo hoa...',
-      image: '/placeholder.svg',
-      category: 'Sự kiện',
-      author: 'Trần Thị B',
-      publishDate: '2024-01-12',
-      views: 2156,
-      comments: 78,
-      featured: true,
-    },
-  ];
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
-  const allNews = [
-    {
-      id: 3,
-      title: 'Top 10 món ăn đặc sản Đà Nẵng du khách không thể bỏ qua',
-      excerpt: 'Khám phá những món ăn đặc sản độc đáo nhất của Đà Nẵng từ Mì Quảng, Bún chả cá đến Bánh xèo...',
-      image: '/placeholder.svg',
-      category: 'Cẩm nang',
-      author: 'Lê Văn C',
-      publishDate: '2024-01-10',
-      views: 987,
-      comments: 23,
-      featured: false,
-    },
-    {
-      id: 4,
-      title: 'Bí quyết du lịch Đà Nẵng 3 ngày 2 đêm với ngân sách tiết kiệm',
-      excerpt: 'Hướng dẫn chi tiết cách du lịch Đà Nẵng 3 ngày 2 đêm chỉ với 2 triệu đồng bao gồm ăn, ở, đi lại...',
-      image: '/placeholder.svg',
-      category: 'Cẩm nang',
-      author: 'Phạm Thị D',
-      publishDate: '2024-01-08',
-      views: 1456,
-      comments: 34,
-      featured: false,
-    },
-    {
-      id: 5,
-      title: 'Review khách sạn 5 sao tại Đà Nẵng: Trải nghiệm xa hoa bên bờ biển',
-      excerpt: 'Đánh giá chi tiết các khách sạn 5 sao hàng đầu tại Đà Nẵng với dịch vụ đẳng cấp và view biển tuyệt đẹp...',
-      image: '/placeholder.svg',
-      category: 'Review',
-      author: 'Hoàng Văn E',
-      publishDate: '2024-01-05',
-      views: 2234,
-      comments: 67,
-      featured: false,
-    },
-    {
-      id: 6,
-      title: 'Lễ hội Cầu Ngư Đà Nẵng 2024 - Bảo tồn văn hóa biển đảo',
-      excerpt: 'Lễ hội Cầu Ngư truyền thống của ngư dân Đà Nẵng sẽ được tổ chức tại bãi biển Mỹ Khê...',
-      image: '/placeholder.svg',
-      category: 'Lễ hội',
-      author: 'Vũ Thị F',
-      publishDate: '2024-01-03',
-      views: 756,
-      comments: 12,
-      featured: false,
-    },
-  ];
+  const fetchPosts = async () => {
+    try {
+      const res = await fetch(`/api/posts?category=tin_tuc&status=published`);
+      if (res.ok) {
+        const data = await res.json();
+        // Sắp xếp theo ngày mới nhất
+        const sorted = data.sort((a: Post, b: Post) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setPosts(sorted);
+      } else {
+        toast({ title: "Lỗi", description: "Không thể tải tin tức", variant: "destructive" });
+      }
+    } catch (err) {
+      toast({ title: "Lỗi mạng", description: "Vui lòng thử lại", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN');
+    return new Date(dateString).toLocaleDateString('vi-VN');
   };
+
+  const getExcerpt = (content: string, length = 120) => {
+    const text = content.replace(/<[^>]*>/g, ''); // Loại bỏ HTML
+    return text.length > length ? text.substring(0, length) + '...' : text;
+  };
+
+  const filteredPosts = posts
+    .filter(post => post.status === 'published')
+    .filter(post => {
+      const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || post.title.includes(selectedCategory);
+      return matchesSearch && matchesCategory;
+    });
+
+  const featuredNews = filteredPosts.slice(0, 2);
+  const allNews = filteredPosts.slice(2);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main>
         {/* Hero Section */}
-        <section className="relative h-[50vh] flex items-center justify-center overflow-hidden">
+        <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-accent/90 z-10" />
           <div className="absolute inset-0">
             <img
-              src="/placeholder.svg"
+              src={featuredNews[0]?.images[0] ? 
+                (featuredNews[0].images[0].startsWith('http') ? featuredNews[0].images[0] : `${BACKEND_URL}${featuredNews[0].images[0]}`)
+                : "/placeholder.svg"}
               alt="Tin tức du lịch"
               className="w-full h-full object-cover"
             />
@@ -126,7 +121,7 @@ const News = () => {
         </section>
 
         {/* Search & Filter */}
-        <section className="py-12 bg-muted/20">
+        <section className="py-6 bg-muted/20">
           <div className="container mx-auto px-4">
             <Card className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -134,17 +129,19 @@ const News = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Tìm kiếm tin tức..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
                   />
                 </div>
-                <Select>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                   <SelectTrigger>
                     <SelectValue placeholder="Danh mục" />
                   </SelectTrigger>
                   <SelectContent>
-                    {newsCategories.map((category) => (
-                      <SelectItem key={category.value} value={category.value}>
-                        {category.label}
+                    {newsCategories.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -170,77 +167,80 @@ const News = () => {
         </section>
 
         {/* Featured News */}
-        <section className="py-20">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <Badge className="mb-4 sunset-gradient text-white">Tin nổi bật</Badge>
-              <h2 className="text-4xl font-bold mb-4">
-                Tin tức <span className="text-primary">nổi bật</span>
-              </h2>
-            </div>
+        {featuredNews.length > 0 && (
+          <section className="py-6">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-12">
+                <Badge className="mb-4 sunset-gradient text-white">Tin nổi bật</Badge>
+                <h2 className="text-4xl font-bold mb-4">
+                  Tin tức <span className=" text-primary">nổi bật</span>
+                </h2>
+              </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-              {featuredNews.map((news) => (
-                <Card key={news.id} className="group card-hover border-0 shadow-lg overflow-hidden">
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={news.image}
-                      alt={news.title}
-                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <Badge className="tropical-gradient text-white">
-                        {news.category}
-                      </Badge>
-                    </div>
-                    <div className="absolute top-4 right-4">
-                      <Badge className="bg-red-500 text-white">
-                        Nổi bật
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  <CardContent className="p-6">
-                    <h3 className="text-2xl font-bold mb-3 line-clamp-2 group-hover:text-primary transition-colors">
-                      {news.title}
-                    </h3>
-                    
-                    <p className="text-muted-foreground mb-4 line-clamp-3">
-                      {news.excerpt}
-                    </p>
-                    
-                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-1">
-                          <User className="h-4 w-4" />
-                          <span>{news.author}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="h-4 w-4" />
-                          <span>{formatDate(news.publishDate)}</span>
-                        </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+                {featuredNews.map((news) => (
+                  <Card key={news._id} className="group card-hover border-0 shadow-lg overflow-hidden">
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={news.images[0] ? 
+                          (news.images[0].startsWith('http') ? news.images[0] : `${BACKEND_URL}${news.images[0]}`)
+                          : "/placeholder.svg"}
+                        alt={news.title}
+                        className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-4 left-4">
+                        <Badge className="tropical-gradient text-white">
+                          Tin tức
+                        </Badge>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center space-x-1">
-                          <Eye className="h-4 w-4" />
-                          <span>{news.views}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <MessageCircle className="h-4 w-4" />
-                          <span>{news.comments}</span>
-                        </div>
+                      <div className="absolute top-4 right-4">
+                        <Badge className="bg-red-500 text-white">
+                          Nổi bật
+                        </Badge>
                       </div>
                     </div>
                     
-                    <Button className="w-full hero-gradient hover:opacity-90 text-white">
-                      Đọc tiếp
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+                    <CardContent className="p-6">
+                      <h3 className="text-2xl font-bold mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+                        {news.title}
+                      </h3>
+                      
+                      <p className="text-muted-foreground mb-4 line-clamp-3">
+                        {getExcerpt(news.content)}
+                      </p>
+                      
+                      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-1">
+                            <Calendar className="h-4 w-4" />
+                            <span>{formatDate(news.createdAt)}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-1">
+                            <Eye className="h-4 w-4" />
+                            <span>{news.views || 0}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <MessageCircle className="h-4 w-4" />
+                            <span>{news.comments || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        className="w-full hero-gradient hover:opacity-90 text-white" 
+                        onClick={() => navigate(`/news/${news._id}`)}
+                      >
+                        Đọc tiếp
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* All News */}
         <section className="py-20 bg-muted/20">
@@ -251,62 +251,67 @@ const News = () => {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {allNews.map((news) => (
-                <Card key={news.id} className="group card-hover border-0 shadow-lg overflow-hidden">
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={news.image}
-                      alt={news.title}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <Badge className="bg-black/20 text-white">
-                        {news.category}
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-bold mb-3 line-clamp-2 group-hover:text-primary transition-colors">
-                      {news.title}
-                    </h3>
-                    
-                    <p className="text-muted-foreground mb-4 line-clamp-3">
-                      {news.excerpt}
-                    </p>
-                    
-                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                      <div className="flex items-center space-x-1">
-                        <User className="h-4 w-4" />
-                        <span>{news.author}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>{formatDate(news.publishDate)}</span>
+            {allNews.length === 0 ? (
+              <p className="text-center text-muted-foreground py-10">Chưa có bài viết nào.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {allNews.map((news) => (
+                  <Card key={news._id} className="group card-hover border-0 shadow-lg overflow-hidden">
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={news.images[0] ? 
+                          (news.images[0].startsWith('http') ? news.images[0] : `${BACKEND_URL}${news.images[0]}`)
+                          : "/placeholder.svg"}
+                        alt={news.title}
+                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-4 left-4">
+                        <Badge className="bg-black/20 text-white">
+                          Tin tức
+                        </Badge>
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3 text-sm text-muted-foreground">
+                    <CardContent className="p-6">
+                      <h3 className="text-xl font-bold mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+                        {news.title}
+                      </h3>
+                      
+                      <p className="text-muted-foreground mb-4 line-clamp-3">
+                        {getExcerpt(news.content, 100)}
+                      </p>
+                      
+                      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
                         <div className="flex items-center space-x-1">
-                          <Eye className="h-4 w-4" />
-                          <span>{news.views}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <MessageCircle className="h-4 w-4" />
-                          <span>{news.comments}</span>
+                          <Calendar className="h-4 w-4" />
+                          <span>{formatDate(news.createdAt)}</span>
                         </div>
                       </div>
-                    </div>
-                    
-                    <Button className="w-full sunset-gradient hover:opacity-90 text-white">
-                      Đọc tiếp
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3 text-sm text-muted-foreground">
+                          <div className="flex items-center space-x-1">
+                            <Eye className="h-4 w-4" />
+                            <span>{news.views || 0}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <MessageCircle className="h-4 w-4" />
+                            <span>{news.comments || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        className="w-full sunset-gradient hover:opacity-90 text-white"
+                        onClick={() => navigate(`/news/${news._id}`)}
+                      >
+                        Đọc tiếp
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
 
             <div className="text-center mt-12">
               <Button variant="outline" size="lg" className="border-primary text-primary hover:bg-primary hover:text-white">

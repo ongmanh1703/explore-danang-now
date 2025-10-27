@@ -1,17 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Menu, X, MapPin, Phone, Mail } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Menu, X, MapPin, Phone, Mail, LogOut, Bus } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  // Lấy user từ localStorage khi component mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  // Xử lý đăng xuất
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    setUser(null);
+    navigate('/');
+  };
 
   const navigationItems = [
     { label: 'Trang chủ', href: '/' },
     { label: 'Giới thiệu', href: '/about' },
     { label: 'Khám phá', href: '/destinations' },
     { label: 'Tour du lịch', href: '/tours' },
-    { label: 'Khách sạn', href: '/hotels' },
     { label: 'Ẩm thực', href: '/cuisine' },
     { label: 'Tin tức', href: '/news' },
   ];
@@ -36,10 +54,34 @@ const Header = () => {
                 <span>info@danangtravel.vn</span>
               </div>
             </div>
-            <div className="hidden md:flex space-x-4">
-              <Button variant="ghost" size="sm">Đăng nhập</Button>
-              <Button variant="outline" size="sm">Đăng ký</Button>
-            </div>
+
+            {/* Nếu đã đăng nhập */}
+            {user ? (
+              <div className="hidden md:flex items-center space-x-4">
+                <span className="text-primary font-medium">
+                  Xin chào, {user.name || user.fullname || 'Người dùng'}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="flex items-center space-x-1"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Đăng xuất</span>
+                </Button>
+              </div>
+            ) : (
+              // Nếu chưa đăng nhập
+              <div className="hidden md:flex space-x-4">
+                <Link to="/login">
+                  <Button variant="ghost" size="sm">Đăng nhập</Button>
+                </Link>
+                <Link to="/register">
+                  <Button variant="outline" size="sm">Đăng ký</Button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -58,27 +100,43 @@ const Header = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                className="text-foreground hover:text-primary transition-colors font-medium"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="flex items-center space-x-4">
+            <nav className="hidden lg:flex items-center space-x-8">
+              {navigationItems.map((item) => (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className="text-foreground hover:text-primary transition-colors font-medium"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
 
-          {/* Mobile menu button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </Button>
+            {/* Nút Bus căn phải */}
+            {user && (
+              <Link to="/my-bookings">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-foreground hover:text-primary transition-colors ml-12"
+                  title="Tour đã đặt"
+                >
+                  <Bus className="h-8 w-8" />
+                </Button>
+              </Link>
+            )}
+
+            {/* Mobile menu button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
@@ -89,15 +147,52 @@ const Header = () => {
                 <Link
                   key={item.href}
                   to={item.href}
-                  className="text-foreground hover:text-primary transition-colors font-medium"
+                  className="text-foreground hover:text-primary transition-colors font-medium flex items-center space-x-2"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.label}
                 </Link>
               ))}
+              {user && (
+                <Link
+                  to="/my-bookings"
+                  className="text-foreground hover:text-primary transition-colors font-medium flex items-center space-x-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <span>Tour đã đặt</span>
+                </Link>
+              )}
               <div className="flex flex-col space-y-2 pt-4 border-t border-border">
-                <Button variant="ghost" size="sm">Đăng nhập</Button>
-                <Button variant="outline" size="sm">Đăng ký</Button>
+                {user ? (
+                  <>
+                    <span className="text-primary font-medium px-2">
+                      Xin chào, {user.name || 'Người dùng'}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        handleLogout();
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      Đăng xuất
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login">
+                      <Button variant="ghost" size="sm" onClick={() => setIsMenuOpen(false)}>
+                        Đăng nhập
+                      </Button>
+                    </Link>
+                    <Link to="/register">
+                      <Button variant="outline" size="sm" onClick={() => setIsMenuOpen(false)}>
+                        Đăng ký
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </nav>
