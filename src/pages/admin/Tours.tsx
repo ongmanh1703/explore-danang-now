@@ -27,12 +27,12 @@ import { toast } from "@/components/ui/use-toast";
 // === API CALL TRỰC TIẾP ===
 const API_BASE = "http://localhost:5000/api/tours";
 
-const callAPI = async (url: string, options = {}) => {
+const callAPI = async (url: string, options: any = {}) => {
   const token = localStorage.getItem("token");
   const headers: any = {
     "Content-Type": "application/json",
     ...(token && { Authorization: `Bearer ${token}` }),
-    ...options.headers,
+    ...(options.headers || {}),
   };
 
   const res = await fetch(url, { ...options, headers });

@@ -4,6 +4,7 @@ import FeaturedDestinations from '@/components/FeaturedDestinations';
 import FeaturedTours from '@/components/FeaturedTours';
 import CuisineSection from '@/components/CuisineSection';
 import Footer from '@/components/Footer';
+import ChatBubble from '@/components/ChatBubble';
 
 const Index = () => {
   return (
@@ -16,6 +17,7 @@ const Index = () => {
         <CuisineSection />
       </main>
       <Footer />
+      <ChatBubble />
     </div>
   );
 };
